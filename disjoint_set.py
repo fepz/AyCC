@@ -1,4 +1,5 @@
 # Implementado según Brassard, sección 5.9
+
 class DisjointSets:
     def __init__(self, elements):
         self.elems = list(elements)

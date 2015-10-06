@@ -1,6 +1,6 @@
 import math
 
-# Code borrowed from http://www.cs.cmu.edu/~ckingsf/class/02713-s13/src/mst.py
+# The code is based on from http://www.cs.cmu.edu/~ckingsf/class/02713-s13/src/mst.py
 
 # Heap item
 class HeapItem(object):
