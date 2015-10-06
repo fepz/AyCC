@@ -11,12 +11,7 @@ tableau20 = [(31, 119, 180), (174, 199, 232), (255, 127, 14), (255, 187, 120),
              (188, 189, 34), (219, 219, 141), (23, 190, 207), (158, 218, 229)]
              
 
-def graph(df, title, save_file):
-    # Scale the RGB values to the [0, 1] range, which is the format matplotlib accepts.    
-    for i in range(len(tableau20)):    
-        r, g, b = tableau20[i]    
-        tableau20[i] = (r / 255., g / 255., b / 255.)
-        
+def graph(df, title, save_file):        
     labels_text = {"kruskal":"Kruskal", "prim":"Prim", "prim_bh":"Prim 2-Heap",
                    "prim_binomial":"Prim Binomial", "prim_fibonacci":"Prim Fibonacci",
                    "prim_th":"Prim 3-Heap"}
@@ -92,9 +87,14 @@ def scatter(df):
 def main():
     data = pd.read_csv("test-results.txt", sep='\t')
     
+    # Scale the RGB values to the [0, 1] range, which is the format matplotlib accepts.    
+    for i in range(len(tableau20)):    
+        r, g, b = tableau20[i]    
+        tableau20[i] = (r / 255., g / 255., b / 255.)
+    
     graph(data[data.Edges < 110], "100 Edges", "100.pdf") # 100 edges    
-    #graph(data[(data.Edges < 1100) & (data.Edges > 110)], "1000.pdf") # 1000 edges
-    #graph(data[(data.Edges < 11000) & (data.Edges > 1100)], "10000.pdf") # 10000 edges
+    graph(data[(data.Edges < 1100) & (data.Edges > 110)], "1000 Edges", "1000.pdf") # 1000 edges
+    graph(data[(data.Edges < 11000) & (data.Edges > 1100)], "10000 Edges", "10000.pdf") # 10000 edges
     #graph(data[(data.Edges < 110000) & (data.Edges > 11000)], "100000.pdf") # 100000 edges
     #graph(data[(data.Edges < 1100000) & (data.Edges > 110000)], "1000000.pdf") # 1000000 edges
     
