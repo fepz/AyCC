@@ -14,7 +14,8 @@ tableau20 = [(31, 119, 180), (174, 199, 232), (255, 127, 14), (255, 187, 120),
 def graph(df, title, save_file):        
     labels_text = {"kruskal":"Kruskal", "prim":"Prim", "prim_bh":"Prim 2-Heap",
                    "prim_binomial":"Prim Binomial", "prim_fibonacci":"Prim Fibonacci",
-                   "prim_th":"Prim 3-Heap"}
+                   "prim_th":"Prim 3-Heap", "kruskal_sorted1":"Kruskal (Sorted 1)",
+                   "kruskal_sorted2":"Kruskal (Sorted 2)"}
 
     fig, ax = plt.subplots(figsize=(10,7.5))
     
