@@ -268,7 +268,11 @@ def main():
     save_file_path = "test-results.txt"
     
     # search for all the edge files in directory
-    edge_files = glob.glob("{0}/*.edgelist".format(graph_path))
+    edge_files = glob.glob("{0}/*.edxgelist".format(graph_path))
+    
+    if not edge_files:
+        print("No files found!")
+        return
        
     with open(save_file_path, "w") as save_file:
         
