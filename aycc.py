@@ -9,7 +9,7 @@ import os
 from argparse import ArgumentParser   # Command line argument parser
 
 
-def kruskal(graph):
+def kruskal(graph, edges=[], sort=False):
     """ Kruskal's algorithm for finding a minimum spanning tree. Implements
     the solution presented at Brassard's `Fundamentals of Algorithms' book. """
     
@@ -17,8 +17,10 @@ def kruskal(graph):
     n = nx.number_of_nodes(graph)
 
     # list of all the edges in graph, sorted by increasing lenght
-    edges = graph.edges(data=True)
-    #edges.sort(key=lambda edge: edge[2]['weight'])
+    if not edges:
+        edges = graph.edges(data=True)        
+        if sort:
+            edges.sort(key=lambda edge: edge[2]['weight'])
 
     # Initialize n sets, each containing a different element of N
     uf = ds.DisjointSets(graph.nodes())
@@ -41,9 +43,8 @@ def kruskal(graph):
 
 
 def prim(graph):
-    """ Prim's algorithm for finding a minimum spanning tree. Implements the
-    solution presented at Brassard's `Fundamentals of Algorithms' book. It uses
-    linked lists. """
+    """ Prim's algorithm for finding a minimum spanning tree. Implements the 
+    Brassard's `Fundamentals of Algorithms' pseudocode, using lists. """
     
     # Obtiene matriz de adyacencia con <inf> en nodos no conectados.
     mx = nx.adjacency_matrix(graph).toarray()
@@ -227,6 +228,18 @@ def test_mst(graph):
     mst = kruskal(graph)
     clockt = time.clock() - clockt
     tests["kruskal"] = [mst, clockt, len(mst)]
+    
+    edges = graph.edges(data=True)
+    edges.sort(key=lambda edge: edge[2]['weight'])
+    clockt = time.clock()
+    mst = kruskal(graph, edges)
+    clockt = time.clock() - clockt
+    tests["kruskal_sorted1"] = [mst, clockt, len(mst)]
+    
+    clockt = time.clock()
+    mst = kruskal(graph, sort=True)
+    clockt = time.clock() - clockt
+    tests["kruskal_sorted2"] = [mst, clockt, len(mst)]
     
     clockt = time.clock()
     mst = prim(graph)
