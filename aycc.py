@@ -18,7 +18,7 @@ def kruskal(graph):
 
     # list of all the edges in graph, sorted by increasing lenght
     edges = graph.edges(data=True)
-    edges.sort(key=lambda edge: edge[2]['weight'])
+    #edges.sort(key=lambda edge: edge[2]['weight'])
 
     # Initialize n sets, each containing a different element of N
     uf = ds.DisjointSets(graph.nodes())
@@ -226,32 +226,32 @@ def test_mst(graph):
     clockt = time.clock()
     mst = kruskal(graph)
     clockt = time.clock() - clockt
-    tests["kruskal"] = [mst, clockt]
+    tests["kruskal"] = [mst, clockt, len(mst)]
     
     clockt = time.clock()
     mst = prim(graph)
     clockt = time.clock() - clockt
-    tests["prim"] = [mst, clockt]
+    tests["prim"] = [mst, clockt, len(mst)]
     
     clockt = time.clock()
     mst = prim_heap(graph, 2)
     clockt = time.clock() - clockt
-    tests["prim_bh"] = [mst, clockt]
+    tests["prim_bh"] = [mst, clockt, len(mst)]
     
     clockt = time.clock()
     mst = prim_heap(graph, 3)
     clockt = time.clock() - clockt
-    tests["prim_th"] = [mst, clockt]
+    tests["prim_th"] = [mst, clockt, len(mst)]
     
     clockt = time.clock()
     mst = prim_binomial_heap(graph)
     clockt = time.clock() - clockt
-    tests["prim_binomial"] = [mst, clockt]
+    tests["prim_binomial"] = [mst, clockt, len(mst)]
     
     clockt = time.clock()
     mst = prim_fibonacci_heap(graph)
     clockt = time.clock() - clockt
-    tests["prim_fibonacci"] = [mst, clockt]
+    tests["prim_fibonacci"] = [mst, clockt, len(mst)]
     
     return [nx.number_of_nodes(graph), 
             nx.number_of_edges(graph), 
@@ -262,13 +262,11 @@ def test_mst(graph):
 def main():    
     args = get_args()
     
-    graph_path = args.graphpath
-
     # save file path
     save_file_path = "test-results.txt"
     
     # search for all the edge files in directory
-    edge_files = glob.glob("{0}/*.edgelist".format(graph_path))
+    edge_files = glob.glob("{0}/*.edgelist".format(args.graphpath))
     
     if not edge_files:
         print("No files found!")
@@ -288,6 +286,16 @@ def main():
 
                 # test methods
                 result = test_mst(graph)
+                
+                # check mst lenght
+                mst_lengths = []
+                for method, method_results in result[3].items():
+                    mst_lengths.append((method, method_results[2]))
+                lmst = mst_lengths[0]
+                for r in mst_lengths[1:]:
+                    if r[1] != lmst[1]:
+                        print("ERROR!!! {0} |mst|={1}, {2} |mst|={3}".format(lmst[0],lmst[1],r[0],r[1]))
+                        return
                 
                 # save results
                 for method, method_results in result[3].items():
