@@ -1,3 +1,7 @@
+#
+# Generate native binary executable from Python code.
+#
+
 from cx_Freeze import setup, Executable
 from os.path import dirname
 
