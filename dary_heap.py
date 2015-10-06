@@ -5,10 +5,10 @@ import math
 # Heap item
 class HeapItem(object):
     """Represents an item in the heap"""
-    def __init__(self, key, item):
+    def __init__(self, key, value):
         self.key = key
         self.pos = None
-        self.item = item        
+        self.value = value        
         
 
 # d-ary Heap
@@ -44,7 +44,7 @@ class Heap():
         """Return element with smallest key, or None if heap is empty"""
         return self.heap[0] if len(self.heap) > 0 else None
 
-    def deletemin(self):
+    def extractmin(self):
         """Delete the smallest item"""
         if len(self.heap) == 0: 
             return None
@@ -55,10 +55,10 @@ class Heap():
             self.siftdown(last, 0)
         return i
 
-    def insert(self, key, item):
+    def insert(self, key, value):
         """Insert an item into the heap"""
         self.heap.append(None)
-        hi = HeapItem(key,item)
+        hi = HeapItem(key,value)
         self.siftup(hi, len(self.heap)-1)
         return hi
 

@@ -77,93 +77,7 @@ def prim(graph):
     return mst
     
 
-def prim_heap(graph, dary):
-    """ Prim's algorithm for finding a minimum spanning tree. It implements the
-    solution presented at Brassard's `Fundamentals of Algorithms' book, but uses 
-    a d-ary Heap instead of a linked-list. """
-    
-    # initialization step    
-    
-    mx = nx.adjacency_matrix(graph).toarray() # adjacency matrix
-    mx[mx == 0] = 64000                       # Reemplaza ceros por <inf>
-    n = nx.number_of_nodes(graph)             # Número de nodos del grafo
-
-    mst = []
-
-    nearest = [0] * n     # nearest edge to i-node
-    mindist = [64000] * n
-    heapnode = [None] * n # item in the heap
-    
-    # create d-ary heap initialized with the first node
-    heap = dh.Heap(dary)
-    heapnode[0] = heap.insert(mindist[0], 0)
-    
-    # greedy loop
-    for _ in range(n):
-        # Use heap to obtain minimum edge
-        k = heap.deletemin().item
-        
-        mindist[k] = -1
-        if graph.get_edge_data(nearest[k]+1, k+1) is not None:
-            mst.append((nearest[k]+1, k+1, graph.get_edge_data(nearest[k]+1, k+1)))
-        
-        for j in range(1, n):
-            if mx[j,k] <= mindist[j]:
-                mindist[j] = mx[j, k] # cost
-                nearest[j] = k        # edge
-                # update heap
-                if heapnode[j] is None:
-                    heapnode[j] = heap.insert(mindist[j], j)                 
-                else:
-                    heap.decreasekey(heapnode[j], mindist[j])
-
-    return mst
-
-
-def prim_binomial_heap(graph):
-    """ Prim's algorithm for finding a minimum spanning tree. It implements the
-    solution presented at Brassard's `Fundamentals of Algorithms' book, but uses 
-    a Binomial Heap instead of a linked-list. """
-    
-    # initialization step    
-    
-    # Obtiene matriz de adyacencia con <inf> en nodos no conectados.
-    mx = nx.adjacency_matrix(graph).toarray()
-    mx[mx == 0] = 64000                           # Reemplaza ceros por <inf>
-    n = nx.number_of_nodes(graph)                 # Número de nodos del grafo
-
-    mst = []
-
-    nearest = [0] * n     # nearest edge to i-node
-    mindist = [64000] * n
-    heapnode = [None] * n # item in the heap
-    
-    # create d-ary heap initialized with the first node
-    heap = bh.BinomialHeap(infinity=64000)
-    heapnode[0] = heap.insert(mindist[0],0)
-    
-    # greedy loop
-    for _ in range(n):
-        # Use heap to obtain minimum edge        
-        k = heap.extractmin().value
-        
-        mindist[k] = -1
-        if graph.get_edge_data(nearest[k]+1, k+1) is not None:
-            mst.append((nearest[k]+1, k+1, graph.get_edge_data(nearest[k]+1, k+1)))
-        
-        for j in range(1, n):
-            if mx[j,k] < mindist[j]:
-                mindist[j] = mx[j, k] # cost
-                nearest[j] = k        # edge
-                if heapnode[j] is None:
-                    heapnode[j] = heap.insert(mindist[j], j)
-                else:                    
-                    heap.decreasekey(heapnode[j], mindist[j])
-
-    return mst
-    
-    
-def prim_fibonacci_heap(graph):
+def prim_generic_heap(graph, heap):
     """ Prim's algorithm for finding a minimum spanning tree. It implements the
     solution presented at Brassard's `Fundamentals of Algorithms' book, but uses 
     a Fibonacci Heap instead of a linked-list. """
@@ -181,8 +95,6 @@ def prim_fibonacci_heap(graph):
     mindist = [64000] * n
     heapnode = [None] * n # item in the heap
     
-    # create d-ary heap initialized with the first node
-    heap = fh.FibonacciHeap()
     heapnode[0] = heap.insert(mindist[0],0)
     
     # greedy loop
@@ -204,6 +116,41 @@ def prim_fibonacci_heap(graph):
                     heap.decreasekey(heapnode[j], mindist[j])
 
     return mst
+        
+    
+def prim_generic_heap_nx(graph, heap):
+    """ Prim's algorithm for finding a minimum spanning tree. It implements the
+    solution presented at Brassard's `Fundamentals of Algorithms' book, but uses 
+    a Heap instead of a linked-list. The particular heap implementation is user
+    defined by the heap param. """
+
+    # initialization step
+    mst = [] # list of edges that form the minimum spanning tree
+    for node in graph.nodes():        
+        graph.node[node]['c_v'] = float("inf")    # cost
+        graph.node[node]['e_v'] = None            # edge
+        graph.node[node]['heap'] = heap.insert(float("inf"), node)
+    
+    # greedy loop
+    for _ in range(nx.number_of_nodes(graph)):
+        # Use heap to obtain minimum edge        
+        v = heap.extractmin().value
+        
+        # the node v is now counted so c_v <- inf to exclude it from neighbors
+        graph.node[v]['c_v'] = float("-inf")
+        
+        # add the edge to the mst if the cost is know
+        if graph.node[v]['e_v'] is not None:
+            mst.append((v, graph.node[v]['e_v']))
+        
+        # update the weights (costs) of the edges associated with min_node
+        for n in graph.neighbors(v):
+            if graph[v][n]["weight"] < graph.node[n]['c_v']:
+               graph.node[n]['c_v'] = graph[v][n]["weight"]
+               graph.node[n]['e_v'] = v
+               heap.decreasekey(graph.node[n]['heap'], graph.node[n]['c_v'])
+
+    return mst
     
        
 def get_args():
@@ -215,7 +162,7 @@ def get_args():
     
     
 def test_mst(graph):
-    tests = {}
+    results = {}
     clockt = 0
     mst = []
 
@@ -227,49 +174,69 @@ def test_mst(graph):
     clockt = time.clock()
     mst = kruskal(graph)
     clockt = time.clock() - clockt
-    tests["kruskal"] = [mst, clockt, len(mst)]
+    results["kruskal"] = [mst, clockt, len(mst)]
     
     edges = graph.edges(data=True)
     edges.sort(key=lambda edge: edge[2]['weight'])
     clockt = time.clock()
     mst = kruskal(graph, edges)
     clockt = time.clock() - clockt
-    tests["kruskal_sorted1"] = [mst, clockt, len(mst)]
+    results["kruskal_sorted1"] = [mst, clockt, len(mst)]
     
     clockt = time.clock()
     mst = kruskal(graph, sort=True)
     clockt = time.clock() - clockt
-    tests["kruskal_sorted2"] = [mst, clockt, len(mst)]
+    results["kruskal_sorted2"] = [mst, clockt, len(mst)]
     
     clockt = time.clock()
     mst = prim(graph)
     clockt = time.clock() - clockt
-    tests["prim"] = [mst, clockt, len(mst)]
+    results["prim"] = [mst, clockt, len(mst)]
     
     clockt = time.clock()
-    mst = prim_heap(graph, 2)
+    mst = prim_generic_heap(graph, dh.Heap(2))
     clockt = time.clock() - clockt
-    tests["prim_bh"] = [mst, clockt, len(mst)]
+    results["prim_2h"] = [mst, clockt, len(mst)]
     
     clockt = time.clock()
-    mst = prim_heap(graph, 3)
+    mst = prim_generic_heap_nx(graph, dh.Heap(2))
     clockt = time.clock() - clockt
-    tests["prim_th"] = [mst, clockt, len(mst)]
+    results["prim_2h_nx"] = [mst, clockt, len(mst)]
     
     clockt = time.clock()
-    mst = prim_binomial_heap(graph)
+    mst = prim_generic_heap(graph, dh.Heap(3))
     clockt = time.clock() - clockt
-    tests["prim_binomial"] = [mst, clockt, len(mst)]
+    results["prim_3h"] = [mst, clockt, len(mst)]
     
     clockt = time.clock()
-    mst = prim_fibonacci_heap(graph)
+    mst = prim_generic_heap_nx(graph, dh.Heap(3))
     clockt = time.clock() - clockt
-    tests["prim_fibonacci"] = [mst, clockt, len(mst)]
+    results["prim_3h_nx"] = [mst, clockt, len(mst)]
+    
+    clockt = time.clock()
+    mst = prim_generic_heap(graph, bh.BinomialHeap())
+    clockt = time.clock() - clockt
+    results["prim_binomial"] = [mst, clockt, len(mst)]
+    
+    clockt = time.clock()
+    mst = prim_generic_heap_nx(graph, bh.BinomialHeap())
+    clockt = time.clock() - clockt
+    results["prim_binomial_nx"] = [mst, clockt, len(mst)]
+    
+    clockt = time.clock()
+    mst = prim_generic_heap(graph, fh.FibonacciHeap())
+    clockt = time.clock() - clockt
+    results["prim_fibonacci"] = [mst, clockt, len(mst)]
+    
+    clockt = time.clock()
+    mst = prim_generic_heap_nx(graph, fh.FibonacciHeap())
+    clockt = time.clock() - clockt
+    results["prim_fibonacci_nx"] = [mst, clockt, len(mst)]
     
     return [nx.number_of_nodes(graph), 
             nx.number_of_edges(graph), 
             nx.density(graph), 
-            tests]
+            results]
                     
 
 def main():    
