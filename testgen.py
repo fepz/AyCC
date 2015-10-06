@@ -1,16 +1,17 @@
 import math
 import random as rnd
-import sys
+from argparse import ArgumentParser   # Command line argument parser
+
 
 def density(n, m):
     return math.ceil(10 * (2*m) / (n * (n-1))) / 10
 
-def save_graph_to_file(g, n, ne, path=''):
+def save_graph_to_file(g, n, ne, path):
     # Calcula la densidad
     d = density(n, ne)
 
     # Almacena en archivo
-    fp = open(path + 'graph_'+str(ne)+'_'+"{:.1f}".format(d)+'.edgelist', 'w')
+    fp = open(path + '/graph_'+str(ne)+'_'+"{:.1f}".format(d)+'.edgelist', 'w')
     fp.write('# Numero de nodos: ' + str(n) + '\n')
     fp.write('# Numero de arcos: ' + str(ne) + '\n')
     fp.write('# Densidad: ' + "{:.1f}".format(d) + '\n')
@@ -33,7 +34,7 @@ def gen_complete_graph(n):
 
 # Genera una secuencia de grafos para un m (cant. arcos) fija
 # y una d (densidad) variable cada ds=0.1 pasos.
-def gen_graph_seq(m):
+def gen_graph_seq(m, save_path):
     d = [round(x/10,1) for x in range(10, 2, -1)]
     n = list(map(cant_nodos, [m]*len(d), d))
     mt = len(n)
@@ -46,7 +47,7 @@ def gen_graph_seq(m):
 
         if p == n[t]:
             # Almacena los grafos intermedios segun criterio.
-            save_graph_to_file(g, p, m, path='./test/')
+            save_graph_to_file(g, p, m, path=save_path)
             t += 1
 
         e = g[p - 1]
@@ -55,13 +56,22 @@ def gen_graph_seq(m):
 
     return g
 
-if __name__ == '__main__':
 
-    if(len(sys.argv) != 2):
-        print('Uso: python testgen.py m')
-        print('donde m es el número de arcos a generar')
-        exit(1)
-
+def get_args():
+    """ Parse arguments from the command line """    
+    parser = ArgumentParser()
+    parser.add_argument("numedges", help="Number of edges to generate", type=int)
+    parser.add_argument("--graphpath", help="Save directory", default=".", type=str)    
+    return parser.parse_args()
+    
+    
+def main():
+    args = get_args()
+    
     print("Generando...")
-    gen_graph_seq(int(sys.argv[1]))    # SE LE PASA LA CANT DE NODOS POR LINEA DE COMANDO
+    gen_graph_seq(args.numedges, args.graphpath)
     print("Generación finalizada.")
+    
+
+if __name__ == '__main__':
+    main()
