@@ -79,8 +79,8 @@ def prim(graph):
 
 def prim_generic_heap(graph, heap):
     """ Prim's algorithm for finding a minimum spanning tree. It implements the
-    solution presented at Brassard's `Fundamentals of Algorithms' book, but uses 
-    a Fibonacci Heap instead of a linked-list. """
+    solution presented at Brassard's `Fundamentals of Algorithms' book. It uses
+    a Heap (concrete implementation by the heap param) and a adjacency matrix. """
     
     # initialization step    
     
