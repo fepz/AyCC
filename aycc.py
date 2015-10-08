@@ -1,3 +1,5 @@
+from __future__ import print_function # stderr
+
 import networkx as nx                 # graph library
 import binomial_heap as bh            # Binomial heap implementation
 import dary_heap as dh                # D-ary heap implementation
@@ -6,8 +8,9 @@ import disjoint_set as ds             # Disjoint set implementation
 import time                           # Time functions
 import glob
 import os
+import sys
+import process_results as pr
 from argparse import ArgumentParser   # Command line argument parser
-
 
 def kruskal(graph, edges=[], sort=False):
     """ Kruskal's algorithm for finding a minimum spanning tree. Implements
@@ -158,10 +161,15 @@ def get_args():
     parser = ArgumentParser()
     parser.add_argument("--graphpath", help="Directory with graphs", default=".", type=str)    
     parser.add_argument("--numreps", help="Number of test reps per method", default=10, type=int)
+    parser.add_argument("--graph", help="Generate graphs", action="store_true")
+    parser.add_argument("--report", help="Generate report", action="store_true")
     return parser.parse_args()
     
     
 def test_mst(graph):
+    """ Calculates the mst of graph with kruskal and prim. Returns a dictionary
+    with the results for each methods: mst, calc time in usecs and number of 
+    edges in the mst. """
     results = {}
     clockt = 0
     mst = []
@@ -242,50 +250,62 @@ def test_mst(graph):
 def main():    
     args = get_args()
     
-    # save file path
-    save_file_path = "test-results.txt"
+    # Output file path
+    save_file_path = "{0}/test-result.txt".format(args.graphpath)
     
-    # search for all the edge files in directory
+    # Search for all the edge files in grappath directory
     edge_files = glob.glob("{0}/*.edgelist".format(args.graphpath))
     
+    # Verifies that there are .edgelist files in graphpath
     if not edge_files:
-        print("No files found!")
+        path_string = "current" if args.graphpath == "." else args.graphpath
+        print("Error: No *.edgelist files found in {0} directory!".format(path_string), file=sys.stderr)
         return
        
-    with open(save_file_path, "w") as save_file:
-        
+    with open(save_file_path, "w") as save_file:        
         save_file.write("Test\tFile\tNodes\tEdges\tDensity\tAlgorithm\tTime\n")
         
-        for edge_file in edge_files:
-            
-            print("Testing {0} ...".format(edge_file))
+        for edge_file in edge_files:            
+            print("Testing {0} ...".format(edge_file), file=sys.stdout)
             
             for rep in range(args.numreps):
-                # read the graph from the file
+                # Read graph from the file
                 graph = nx.read_weighted_edgelist(edge_file, nodetype=int)
 
-                # test methods
+                # Test the mst methods
                 result = test_mst(graph)
                 
-                # check mst lenght
+                # Verifies that all the methods give the same mst length
                 mst_lengths = []
                 for method, method_results in result[3].items():
                     mst_lengths.append((method, method_results[2]))
                 lmst = mst_lengths[0]
                 for r in mst_lengths[1:]:
                     if r[1] != lmst[1]:
-                        print("ERROR!!! {0} |mst|={1}, {2} |mst|={3}".format(lmst[0],lmst[1],r[0],r[1]))
+                        print("ERROR!!! {0} |mst|={1}, {2} |mst|={3}".format(lmst[0],lmst[1],r[0],r[1]), file=sys.stderr)
                         return
                 
-                # save results
+                # Write the results into the output file
                 for method, method_results in result[3].items():
                     save_file.write("{0}\t{1}\t{2}\t{3}\t{4:0.1}\t".format(rep, os.path.basename(edge_file), result[0], result[1], result[2]))
                     save_file.write("{0}\t{1}\n".format(method, method_results[1]))
                 save_file.write("\n")
-                
+             
+            # Flush last rep results into the output file
             save_file.flush()
-                
-    print("Done!")
+            
+    # Generate the graphs
+    if args.graph:
+        print("Generating PDFs...", file=sys.stdout)
+        pr.generate_graphs(save_file_path, args.graphpath)
+              
+    # Generate a report in CSV
+    if args.report:
+        print("Generating CSV report...", file=sys.stdout)
+        report_save_file_path = "{0}/test-report.csv".format(args.graphpath)        
+        pr.generate_simple_report_csv(save_file_path, report_save_file_path)
+    
+    print("Done!", file=sys.stdout)
         
 
 if __name__ == '__main__':
