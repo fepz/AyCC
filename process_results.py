@@ -27,11 +27,12 @@ prim_methods = [m for m in all_methods if m.startswith("prim")]
 prim_methods_nx = [m for m in all_methods if m.endswith("_nx")]
 kruskal_methods = [m for m in all_methods if m.startswith("kruskal")]
 
-def graph(df, title, save_file, methods=[], colors=[]):
+
+def graph(df, title, save_file, methods=[], colors=[], variant="Density"):
     if not colors:
         colors = tableau20
        
-    _, ax = plt.subplots(figsize=(10,7.5))
+    fig, ax = plt.subplots(figsize=(10,7.5))
     
     plt.xticks(fontsize=12)
     plt.yticks(fontsize=12)
@@ -43,11 +44,13 @@ def graph(df, title, save_file, methods=[], colors=[]):
     for rank, v in enumerate(df.groupby(["Algorithm"])):
         algorithm, group = v[0], v[1]
         if algorithm in methods:
-            group_agg = group.groupby(["Density"]).mean()["Time"]        
+            group_agg = group.groupby([variant]).mean()["Time"]        
             group_agg.plot(ax=ax, kind="line", lw=2.5, ms=7, color=colors[rank], label=labels_text[algorithm])
     
     plt.legend(loc="best")
     plt.savefig(save_file)
+    
+    plt.close(fig)
         
     
 def scatter(df):
@@ -100,43 +103,3 @@ def generate_graphs(file, save_path):
     ppk.append("prim")
     graph(data, "PPK", "{0}/ppk.pdf".format(save_path), ppk, tableau20)    
     
-
-def main():
-    data = pd.read_csv("test-result.txt", sep='\t')
-    
-    # Scale the RGB values to the [0, 1] range, which is the format matplotlib accepts.    
-    for i in range(len(tableau20)):    
-        r, g, b = tableau20[i]    
-        tableau20[i] = (r / 255., g / 255., b / 255.)
-    
-    # Graph kruskal methods    
-    graph(data[data.Edges < 110], "100 Edges - Kruskal", "100K.pdf", kruskal_methods) # 100 edges    
-    graph(data[(data.Edges < 1100) & (data.Edges > 110)], "1000 Edges - Kruskal", "1000K.pdf", kruskal_methods) # 1000 edges
-    graph(data[(data.Edges < 11000) & (data.Edges > 1100)], "10000 Edges - Kruskal", "10000K.pdf", kruskal_methods) # 10000 edges    
-    
-    # Graph all Prim methods
-    graph(data[data.Edges < 110], "100 Edges - Prim", "100P.pdf", prim_methods) # 100 edges    
-    graph(data[(data.Edges < 1100) & (data.Edges > 110)], "1000 Edges - Prim", "1000P.pdf", prim_methods) # 1000 edges
-    graph(data[(data.Edges < 11000) & (data.Edges > 1100)], "10000 Edges - Prim", "10000P.pdf", prim_methods) # 10000 edges
-    #graph(data[(data.Edges < 110000) & (data.Edges > 11000)], "100000.pdf") # 100000 edges
-    #graph(data[(data.Edges < 1100000) & (data.Edges > 110000)], "1000000.pdf") # 1000000 edges
-    
-    # Graph all Prim methods
-    graph(data[data.Edges < 110], "100 Edges - Prim (nx)", "100Pnx.pdf", prim_methods_nx) # 100 edges    
-    graph(data[(data.Edges < 1100) & (data.Edges > 110)], "1000 Edges - Prim (nx)", "1000Pnx.pdf", prim_methods_nx) # 1000 edges
-    graph(data[(data.Edges < 11000) & (data.Edges > 1100)], "10000 Edges - Prim (nx)", "10000Pnx.pdf", prim_methods_nx) # 10000 edges
-    #graph(data[(data.Edges < 110000) & (data.Edges > 11000)], "100000.pdf") # 100000 edges
-    #graph(data[(data.Edges < 1100000) & (data.Edges > 110000)], "1000000.pdf") # 1000000 edges
-    
-    # Graph Prim (nx) methods, Prim and Kruskal
-    ppk = []
-    ppk.extend(prim_methods_nx)
-    ppk.append("kruskal")
-    ppk.append("prim")
-    graph(data[data.Edges < 110], "100 Edges - Prim (nx)", "100Ppk.pdf", ppk) # 100 edges    
-    graph(data[(data.Edges < 1100) & (data.Edges > 110)], "1000 Edges - Prim (nx)", "1000Ppk.pdf", ppk) # 1000 edges
-    graph(data[(data.Edges < 11000) & (data.Edges > 1100)], "10000 Edges - Prim (nx)", "10000Ppk.pdf", ppk) # 10000 edges
-
-
-if __name__ == '__main__':
-    main()
