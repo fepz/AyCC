@@ -319,12 +319,16 @@ def main():
         if args.graph:
             print("Generating PDFs...", file=sys.stdout)
             pr.generate_graphs(save_file_path, args.graphpath)
+            
+        print("Done!", file=sys.stdout)
                       
-    if args.reportgraph:
+    elif args.reportgraph:
         print("Generating PDFs..")
         pr.graphX(args.graphpath)
-    
-    print("Done!", file=sys.stdout)
+        print("Done!", file=sys.stdout)
+        
+    else:
+        print("Nothing to do! see --help for valid commands.\n")
         
 
 if __name__ == '__main__':
